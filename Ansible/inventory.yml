@@ -1,0 +1,19 @@
+all:
+  children:
+    linux:
+      children:
+        webservers:
+          hosts:
+            web1:
+              ansible_host: 192.168.171.19
+            web2:
+              ansible_host: 192.168.171.20
+        database_servers:
+          hosts:
+            db1:
+              ansible_host: 192.168.171.21
+      vars:
+        ansible_user: ansible
+        ansible_connection: ssh
+        ansible_ssh_private_key_file: ~/.ssh/keys/ansible_ssh_key
+        ansible_port: 22

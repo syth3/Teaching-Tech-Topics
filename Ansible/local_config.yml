@@ -1,0 +1,61 @@
+---
+- name: Install Python from Source
+  hosts: linux
+  become: yes
+  vars:
+    python_version: 3.9.5
+    python_from_source_url: https://www.python.org/ftp/python/{{ python_version }}/Python-{{ python_version }}.tar.xz
+  
+  tasks:
+  - name: Install apt dependencies
+    apt:
+      update_cache: yes
+      state: present
+      name:
+        - build-essential
+        - zlib1g-dev
+        - libncurses5-dev
+        - libgdbm-dev
+        - libnss3-dev
+        - libssl-dev
+        - libsqlite3-dev
+        - libreadline-dev
+        - libffi-dev
+        - curl
+        - libbz2-dev
+  
+  - name: Download Python tar
+    get_url:
+      url: "{{ python_from_source_url }}"
+      dest: /tmp/Python-{{ python_version }}.tar.xy
+
+  - name: Ensure Python opt directory exists
+    file:
+      name: /opt/Python-{{ python_version }}
+      state: directory
+
+  - name: Extract Python tar
+    unarchive:
+      remote_src: yes
+      src: /tmp/Python-{{ python_version }}.tar.xy
+      dest: /opt/
+
+  - name: Run Python configure script
+    command: 
+      chdir: /opt/Python-{{ python_version }}
+      cmd: ./configure --enable-optimizations
+
+  - name: Get number of cores on system
+    command: nproc
+    register: nproc_output
+
+  - name: Start the build process
+    make:
+      chdir: /opt/Python-{{ python_version }}
+      params:
+        NUM_THREADS: "{{ nproc_output.stdout }}"
+
+  - name: Install Python
+    make:
+      chdir: /opt/Python-{{ python_version }}
+      target: altinstall
